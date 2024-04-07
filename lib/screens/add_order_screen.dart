@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../services/database_service.dart';
 import '../models/order.dart';
 
@@ -31,22 +32,45 @@ class _AddOrderScreenState extends State<AddOrderScreen> {
 
   void _addOrder() async {
     if (_formKey.currentState!.validate() && _dueDate != null) {
-      // Divide el string de ítems por las comas y trim para eliminar espacios en blanco.
       List<String> itemsList =
           _itemsController.text.split(',').map((item) => item.trim()).toList();
 
-      // Crear un objeto Order con la lista de ítems
       final order = Order(
-        id: null, // Autoincremented by SQLite
+        id: null, // Autoincrementado por SQLite
         cliente: _clienteController.text,
         items: itemsList,
         dueDate: _dueDate!,
       );
+
       await _dbService.insertOrder(order);
-      Navigator.pop(context); // Return to previous screen
+
+      // Generar datos del QR
+      final qrData = _dbService.generateQRData(order);
+
+      // Mostrar un diálogo con el QR generado
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('Código QR para el Pedido'),
+            content: QrImageView(
+              data: qrData,
+              version: QrVersions.auto,
+              size: 200.0,
+            ),
+            actions: [
+              TextButton(
+                child: const Text('Hecho'),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ],
+          );
+        },
+      );
+      // Regresar a la pantalla anterior con el resultado
+      Navigator.pop(context, true);
     }
   }
-
 
   @override
   void dispose() {

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 import '../models/order.dart';
@@ -45,4 +47,14 @@ class DatabaseService {
       return Order.fromMap(orderMaps[i]);
     });
   }
+  String generateQRData(Order order) {
+  final Map<String, dynamic> orderData = {
+    'cliente': order.cliente,
+    'items': order.items,
+    'dueDate': order.dueDate.toIso8601String(), // Convierte la fecha a un string ISO para almacenarla en el QR
+  };
+
+  // Convertir los datos del pedido en un string JSON
+  return jsonEncode(orderData);
+}
 }
